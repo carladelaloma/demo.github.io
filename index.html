@@ -11,7 +11,6 @@
 
   <script>
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const SpeechSynthesis = window.speechSynthesis;
 
     if (!SpeechRecognition) {
       alert("Tu navegador no soporta SpeechRecognition. Usa Chrome en PC o Android.");
@@ -38,15 +37,16 @@
       // Llamar a la IA (Netlify Function)
       const respuesta = await preguntarIA(texto);
 
-      // Mostrar mensaje de la IA
+      // Mostrar mensaje de la IA (solo aquí)
       const divIA = document.createElement("p");
-      divIA.textContent = "🤖 IA: " + respuesta;
+      divIA.textContent = "🤖 Cabeza Clava: " + respuesta;
       document.getElementById("conversacion").appendChild(divIA);
 
       // Síntesis de voz
       const utter = new SpeechSynthesisUtterance(respuesta);
       utter.lang = "es-ES";
-      SpeechSynthesis.speak(utter);
+      utter.rate = 0.9; // un poco más lento, estilo solemne
+      speechSynthesis.speak(utter);
     };
 
     recognition.onspeechend = () => {
@@ -61,27 +61,14 @@
 
     // --- 🔥 Función que llama a Netlify ---
     async function preguntarIA(prompt) {
-  const res = await fetch("/.netlify/functions/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt })
-  });
-  const data = await res.json();
-  const respuesta = data.choices[0].message.content;
-
-  // Mostrar texto
-  const divIA = document.createElement("p");
-  divIA.textContent = "🤖 Cabeza Clava: " + respuesta;
-  document.getElementById("conversacion").appendChild(divIA);
-
-  // Leer en voz
-  const utter = new SpeechSynthesisUtterance(respuesta);
-  utter.lang = "es-ES";
-  utter.rate = 0.9; // un poco más lento, estilo solemne
-  speechSynthesis.speak(utter);
-
-  return respuesta;
-}
+      const res = await fetch("/.netlify/functions/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      return data.choices[0].message.content; // solo devolver texto
+    }
   </script>
 </body>
 </html>
