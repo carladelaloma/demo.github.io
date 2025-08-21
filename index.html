@@ -7,8 +7,7 @@
 <body>
   <h2>Habla y el personaje responderá</h2>
   <button id="btnHablar">🎤 Hablar</button>
-  <p id="textoUsuario"></p>
-  <p id="respuesta"></p>
+  <div id="conversacion"></div>
 
   <script>
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -30,11 +29,17 @@
 
     recognition.onresult = (event) => {
       const texto = event.results[0][0].transcript;
-      document.getElementById("textoUsuario").textContent = "👤 Tú: " + texto;
+
+      // Añadir usuario
+      const divUsuario = document.createElement("p");
+      divUsuario.textContent = "👤 Tú: " + texto;
+      document.getElementById("conversacion").appendChild(divUsuario);
 
       // Respuesta simulada (aquí luego pondremos la IA)
       const respuesta = "Hola, escuché que dijiste: " + texto;
-      document.getElementById("respuesta").textContent = "🤖 IA: " + respuesta;
+      const divIA = document.createElement("p");
+      divIA.textContent = "🤖 IA: " + respuesta;
+      document.getElementById("conversacion").appendChild(divIA);
 
       // Síntesis de voz
       const utter = new SpeechSynthesisUtterance(respuesta);
