@@ -2,18 +2,17 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Demo Voz con IA</title>
+  <title>Demo Voz con IA - Cabeza Clava</title>
 </head>
 <body>
-  <h2>Habla y el personaje responderá con IA</h2>
+  <h2>Habla y la Cabeza Clava responderá con IA</h2>
   <button id="btnHablar">🎤 Hablar</button>
   <div id="conversacion"></div>
 
   <script>
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
     if (!SpeechRecognition) {
-      alert("Tu navegador no soporta SpeechRecognition. Usa Chrome en PC o Android.");
+      alert("Tu navegador no soporta SpeechRecognition. Usa Chrome o Safari.");
     }
 
     const recognition = new SpeechRecognition();
@@ -21,6 +20,36 @@
     recognition.continuous = false;
     recognition.interimResults = false;
 
+    // ---- Configuración de voces ----
+    let vozEspanolMasculina = null;
+
+    function cargarVozEspanolMasculina() {
+      const voces = speechSynthesis.getVoices();
+      vozEspanolMasculina = voces.find(
+        v => v.lang.startsWith("es") && (
+          v.name.toLowerCase().includes("male") ||
+          v.name.toLowerCase().includes("diego") ||
+          v.name.toLowerCase().includes("miguel") ||
+          v.name.toLowerCase().includes("google español")
+        )
+      );
+      if (!vozEspanolMasculina) {
+        vozEspanolMasculina = voces.find(v => v.lang.startsWith("es"));
+      }
+    }
+
+    speechSynthesis.onvoiceschanged = cargarVozEspanolMasculina;
+
+    // Forzar desbloqueo de audio en Safari
+    document.body.addEventListener("click", () => {
+      if (!window._vozInicializada) {
+        const test = new SpeechSynthesisUtterance(" ");
+        speechSynthesis.speak(test);
+        window._vozInicializada = true;
+      }
+    });
+
+    // ---- Botón para hablar ----
     document.getElementById("btnHablar").addEventListener("click", () => {
       recognition.start();
       console.log("🎙️ Escuchando...");
@@ -34,19 +63,16 @@
       divUsuario.textContent = "👤 Tú: " + texto;
       document.getElementById("conversacion").appendChild(divUsuario);
 
-      // Llamar a la IA (Netlify Function)
+      // Llamar a la IA
       const respuesta = await preguntarIA(texto);
 
-      // Mostrar mensaje de la IA (solo aquí)
+      // Mostrar respuesta de la IA
       const divIA = document.createElement("p");
-      divIA.textContent = "🤖 Cabeza Clava: " + respuesta;
+      divIA.textContent = "🗿 Cabeza Clava: " + respuesta;
       document.getElementById("conversacion").appendChild(divIA);
 
-      // Síntesis de voz
-      const utter = new SpeechSynthesisUtterance(respuesta);
-      utter.lang = "es-ES";
-      utter.rate = 0.9; // un poco más lento, estilo solemne
-      speechSynthesis.speak(utter);
+      // Reproducir voz
+      hablar(respuesta);
     };
 
     recognition.onspeechend = () => {
@@ -59,7 +85,18 @@
       alert("Error en el reconocimiento de voz: " + event.error);
     };
 
-    // --- 🔥 Función que llama a Netlify ---
+    // ---- Función para reproducir voz ----
+    function hablar(texto) {
+      const utter = new SpeechSynthesisUtterance(texto);
+      utter.lang = "es-ES";
+      utter.rate = 0.9; // estilo solemne, un poco más lento
+      if (vozEspanolMasculina) {
+        utter.voice = vozEspanolMasculina;
+      }
+      speechSynthesis.speak(utter);
+    }
+
+    // ---- Llamada a Netlify Function ----
     async function preguntarIA(prompt) {
       const res = await fetch("/.netlify/functions/chat", {
         method: "POST",
@@ -67,7 +104,7 @@
         body: JSON.stringify({ prompt })
       });
       const data = await res.json();
-      return data.choices[0].message.content; // solo devolver texto
+      return data.choices[0].message.content;
     }
   </script>
 </body>
